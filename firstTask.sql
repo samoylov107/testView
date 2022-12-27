@@ -27,14 +27,9 @@ VALUES ('RUR',  1, '19000101', '40000101'),
        ('USD', 75, '20210102', '20210104'),
        ('USD', 70, '20210104', '40000101')
 
-SELECT YEAR(TRANSACTION_DT) AS Year, MONTH(TRANSACTION_DT) AS Month, CUST_ID, SUM(totalRUR) AS 'Сумма в ₽'
-  FROM 
-(SELECT t.CUST_ID, cr.CURRENCY_ID, t.TRANSACTION_DT, t.TRANSACTION_AMT * MAX(cr.EXCH_RATE) AS totalRUR
-   FROM TestTasks.firstTask.[TRANSACTION] AS t 
-   JOIN TestTasks.firstTask.CURRENCY_RATE AS cr ON t.CURRENCY_ID = cr.CURRENCY_ID
-                                               AND t.TRANSACTION_DT BETWEEN cr.VALID_FROM AND cr.VALID_TO
-  GROUP BY t.CUST_ID, cr.CURRENCY_ID, t.TRANSACTION_AMT, t.TRANSACTION_DT) z1
+SELECT YEAR(TRANSACTION_DT) AS Year, MONTH(TRANSACTION_DT) AS Month, CUST_ID, SUM(t.TRANSACTION_AMT * cr.EXCH_RATE) AS 'Сумма в ₽'
+  FROM ESAMOILOV.firstTask.[TRANSACTION] AS t 
+  JOIN ESAMOILOV.firstTask.CURRENCY_RATE AS cr ON t.CURRENCY_ID = cr.CURRENCY_ID
+ WHERE t.TRANSACTION_DT >= cr.VALID_FROM 
+   AND t.TRANSACTION_DT < cr.VALID_TO
  GROUP BY YEAR(TRANSACTION_DT), MONTH(TRANSACTION_DT), CUST_ID
-
-/* Т.к. при соединении "t.TRANSACTION_DT BETWEEN cr.VALID_FROM AND cr.VALID_TO" может заджойниться сразу несколько курсов на 1 дату, 
-   сперва получаю максимальный курс на каждую дату и только затем ежемесячную сумму рассходов */
